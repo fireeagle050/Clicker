@@ -15,7 +15,7 @@ Clicker is a powerful yet user-friendly application designed to automate repetit
 *   **Coordinate and Color Picker:** Easily pick screen coordinates and colors using keyboard shortcuts.
 *   **Start/Stop Shortcuts:** Start and stop the automation with global keyboard shortcuts.
 *   **Customizable Shortcuts:** Set your own custom shortcuts for various actions.
-*   **Templates:** Save and load your action sequences as templates in `.txt` files.
+*   **Templates:** Save and load your action sequences as templates.
 *   **Themes:** Switch between dark and light themes for a comfortable user experience.
 *   **Logging:** Keep track of actions, failures, and bugs with a detailed logging section.
 *   **User-Friendly UI:** A simple, nice-looking, and well-designed user interface.
