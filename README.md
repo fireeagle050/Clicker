@@ -10,14 +10,14 @@ Clicker is a powerful yet user-friendly application designed to automate repetit
 
 *   **Mouse Actions:** Perform left-clicks, right-clicks, double-clicks, and scrolling.
 *   **Keyboard Actions:** Simulate key presses and keyboard shortcuts.
+*   **Menu:** Swithing themes and colours for buttons section, start/stop, color picker and other shortcuts customizable section, save/load template section, surrent coordinates and colour section, keyboard actions/mouse actions switching section.
 *   **Conditional Logic:** Set conditions based on screen color or coordinates to create intelligent automation.
 *   **Action Sequences:** Add, delete, and reorder a sequence of actions to build complex automation scripts.
 *   **Coordinate and Color Picker:** Easily pick screen coordinates and colors using keyboard shortcuts.
 *   **Start/Stop Shortcuts:** Start and stop the automation with global keyboard shortcuts.
-*   **Customizable Shortcuts:** Set your own custom shortcuts for various actions.
 *   **Templates:** Save and load your action sequences as templates.
 *   **Themes:** Switch between dark and light themes for a comfortable user experience.
-*   **Logging:** Keep track of actions, failures, and bugs with a detailed logging section.
+*   **Logging:** Keep track of actions, failures, and bugs with a detailed logging section as a fotter.
 *   **User-Friendly UI:** A simple, nice-looking, and well-designed user interface.
 
 ## How to Install
