@@ -22,25 +22,9 @@ Clicker is a powerful yet user-friendly application designed to automate repetit
 
 ## How to Install
 
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/your-username/Clicker.git
-    ```
-2.  **Navigate to the project directory:**
-    ```bash
-    cd Clicker
-    ```
-3.  **Install the required libraries:**
-    ```bash
-    pip install -r requirements.txt
-    ```
-
 ## How to Use
 
 1.  **Run the application:**
-    ```bash
-    python Clicker.py
-    ```
 2.  **Adding Actions:**
     *   Use the "Add Action" section to define a new action.
     *   Select the action type (e.g., left-click, right-click, key press).
