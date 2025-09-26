@@ -22,6 +22,9 @@ Clicker is a powerful yet user-friendly application designed to automate repetit
 
 ## How to Install
 
+1.  **Download content from this directory on your PC**
+2.  **Put it together to folder named "Clicker"**
+
 ## How to Use
 
 1.  **Run the application:**
