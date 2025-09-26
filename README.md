@@ -9,11 +9,11 @@ Clicker is a powerful yet user-friendly application designed to automate repetit
 ## Features
 
 *   **Mouse Actions:** Perform left-clicks, right-clicks, double-clicks, and scrolling.
-*   **Keyboard Actions:** Simulate alphabetical, numeric or sepcial key presses and keyboard shortcuts.
+*   **Keyboard Actions:** Simulate alphabetical, numeric or sepcial key presses, keyboard shortcuts, words.
 *   **Menu:** Section for swithing themes and colours for buttons, section for save/load templates, section for saving logs.
 *   **Display:** Current coordinates and colour section.
 *   **Action Configuration:** Delay, loop (0=inf), coordinates, colour, action type list.
-*   **Controls:** Start, Stop, Add, Remove, important shortcuts listed.
+*   **Controls:** Start, Stop, Add, Remove, important shortcuts listed, checkbox "if one operation failed - stop".
 *   **Conditional Logic:** Set conditions based on screen color or coordinates to create intelligent automation.
 *   **Action Sequences:** Add, delete, and reorder a sequence of actions to build complex automation scripts.
 *   **Coordinate and Color Picker:** Easily pick screen coordinates and colors using keyboard shortcuts.
