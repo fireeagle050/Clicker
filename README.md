@@ -17,7 +17,7 @@ Clicker is a powerful yet user-friendly application designed to automate repetit
 *   **Start/Stop Shortcuts:** Start and stop the automation with global keyboard shortcuts.
 *   **Templates:** Save and load your action sequences as templates.
 *   **Themes:** Switch between dark and light themes for a comfortable user experience.
-*   **Logging:** Realtime tracking of actions, failures, and bugs with a detailed logging section as a fotter (save option to '.txt' in menu).
+*   **Logging:** Realtime tracking of actions, failures, and bugs with a detailed logging section as a fotter (save option to `.txt` in menu).
 *   **User-Friendly UI:** A simple, nice-looking, and well-designed user interface.
 
 ## How to Install
