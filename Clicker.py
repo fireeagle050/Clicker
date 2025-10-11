@@ -22,6 +22,9 @@ class AutoClickerApp:
         self.running = False
         self.automation_thread = None
         self.time_delay = 1.0
+        self.loop_count = 0
+        self.stop_on_fail = tk.BooleanVar(value=False)
+        self.captured_key = tk.StringVar(value="")
 
         # --- Theme Colors ---
         self.themes = {
@@ -45,6 +48,7 @@ class AutoClickerApp:
         self.apply_theme("Dark")
         self.update_mouse_position()
         self.setup_global_shortcuts()
+        self._setup_log_auto_management()
         self.log("Application initialized. Press Ctrl+S to start/stop, Ctrl+P to pick coordinates.")
 
     def setup_ui(self):
@@ -104,11 +108,17 @@ class AutoClickerApp:
         self.r_label = tk.Label(self.input_fields_frame, text="R:", font=font_small); self.r_entry = tk.Entry(self.input_fields_frame, width=8, borderwidth=2, relief="solid")
         self.g_label = tk.Label(self.input_fields_frame, text="G:", font=font_small); self.g_entry = tk.Entry(self.input_fields_frame, width=8, borderwidth=2, relief="solid")
         self.b_label = tk.Label(self.input_fields_frame, text="B:", font=font_small); self.b_entry = tk.Entry(self.input_fields_frame, width=8, borderwidth=2, relief="solid")
-        self.key_label = tk.Label(self.input_fields_frame, text="Key:", font=font_small); self.key_entry = tk.Entry(self.input_fields_frame, width=15, borderwidth=2, relief="solid")
         self.scroll_label = tk.Label(self.input_fields_frame, text="Scroll Amt:", font=font_small); self.scroll_entry = tk.Entry(self.input_fields_frame, width=10, borderwidth=2, relief="solid")
+
+        self.key_label = tk.Label(self.input_fields_frame, text="Key:", font=font_small)
+        self.key_capture_button = tk.Button(self.input_fields_frame, text="Capture Key", command=self.start_key_capture, font=("Arial", 10))
+        self.captured_key_display = tk.Label(self.input_fields_frame, textvariable=self.captured_key, font=("Arial", 10, "italic"), relief="sunken", bd=1, width=20, anchor="w")
 
         tk.Label(self.config_frame, text="Delay (s):", font=font_small).grid(row=2, column=0, padx=5, pady=(10,0), sticky="w")
         self.time_entry = tk.Entry(self.config_frame, width=10, borderwidth=2, relief="solid"); self.time_entry.grid(row=2, column=1, padx=5, pady=(10,0), sticky="w"); self.time_entry.insert(0, str(self.time_delay))
+
+        tk.Label(self.config_frame, text="Loops (0=inf):", font=font_small).grid(row=2, column=2, padx=5, pady=(10,0), sticky="w")
+        self.loop_entry = tk.Entry(self.config_frame, width=10, borderwidth=2, relief="solid"); self.loop_entry.grid(row=2, column=3, padx=5, pady=(10,0), sticky="w"); self.loop_entry.insert(0, str(self.loop_count))
 
     def _setup_sequence_frame(self):
         """Frame for displaying and managing the action sequence."""
@@ -135,6 +145,12 @@ class AutoClickerApp:
         tk.Button(self.control_frame, text="Remove Action", command=self.remove_action, font=btn_font, relief="raised", bd=3).grid(row=0, column=1, padx=5, pady=5, sticky="ew")
         self.start_button = tk.Button(self.control_frame, text="Start", command=self.start_automation, font=btn_font, relief="raised", bd=3); self.start_button.grid(row=0, column=2, padx=5, pady=5, sticky="ew")
         self.stop_button = tk.Button(self.control_frame, text="Stop", command=self.stop_automation, font=btn_font, relief="raised", bd=3); self.stop_button.grid(row=0, column=3, padx=5, pady=5, sticky="ew")
+
+        stop_on_fail_check = tk.Checkbutton(self.control_frame, text="If one operation failed - stop", variable=self.stop_on_fail, font=("Arial", 10))
+        stop_on_fail_check.grid(row=1, column=0, columnspan=2, padx=5, pady=5, sticky="w")
+
+        shortcuts_label = tk.Label(self.control_frame, text="Shortcuts: Start/Stop (Ctrl+S) | Pick Color (Ctrl+P)", font=("Arial", 9, "italic"))
+        shortcuts_label.grid(row=2, column=0, columnspan=4, pady=(10,0), sticky="w")
 
     def _setup_log_frame(self):
         """Creates the logging area."""
@@ -189,7 +205,9 @@ class AutoClickerApp:
             self.b_label.grid(row=1, column=4, padx=5, pady=2, sticky="w"); self.b_entry.grid(row=1, column=5, padx=5, pady=2)
             if action == "Scroll": self.scroll_label.grid(row=2, column=0, padx=5, pady=2, sticky="w"); self.scroll_entry.grid(row=2, column=1, padx=5, pady=2)
         elif action == "Key Press":
-            self.key_label.grid(row=0, column=0, padx=5, pady=2, sticky="w"); self.key_entry.grid(row=0, column=1, padx=5, pady=2)
+            self.key_label.grid(row=0, column=0, padx=5, pady=2, sticky="w")
+            self.key_capture_button.grid(row=0, column=1, padx=5, pady=2)
+            self.captured_key_display.grid(row=0, column=2, padx=5, pady=2)
 
     def log(self, message):
         timestamp = datetime.now().strftime("%H:%M:%S")
@@ -229,8 +247,8 @@ class AutoClickerApp:
                 new_action["color"] = (int(r), int(g), int(b)) if r and g and b else None
                 if action_type == "Scroll": new_action["amount"] = int(self.scroll_entry.get())
             elif action_type == "Key Press":
-                key = self.key_entry.get()
-                if not key: raise ValueError("Key cannot be empty.")
+                key = self.captured_key.get()
+                if not key: raise ValueError("No key captured. Please capture a key first.")
                 new_action["key"] = key
             self.actions.append(new_action); self.refresh_listbox()
             self.log(f"Added action: {new_action}")
@@ -262,6 +280,31 @@ class AutoClickerApp:
                 self.refresh_listbox(); self.listbox.select_set(index + 1)
                 self.log(f"Moved action down at index {index}")
 
+    def start_key_capture(self):
+        """Disables the capture button and starts listening for a keypress in a new thread."""
+        self.key_capture_button.config(state="disabled", text="Capturing...")
+        self.log("Starting key capture. Press any key or combination.")
+
+        capture_window = tk.Toplevel(self.root)
+        capture_window.title("Capturing Key")
+        capture_window.geometry("300x100")
+        tk.Label(capture_window, text="Press any key or key combination.\nThis window will close automatically.", font=("Arial", 12)).pack(pady=20)
+        capture_window.transient(self.root)
+        capture_window.grab_set()
+
+        threading.Thread(target=self.listen_for_key, args=(capture_window,), daemon=True).start()
+
+    def listen_for_key(self, capture_window):
+        """Listens for a single key event, updates the UI, and cleans up."""
+        hotkey = keyboard.read_hotkey(suppress=False)
+        
+        self.captured_key.set(hotkey)
+        self.log(f"Captured key: {hotkey}")
+
+        # Re-enable the button and destroy the capture window from the main thread
+        self.root.after(0, self.key_capture_button.config, {"state": "normal", "text": "Capture Key"})
+        self.root.after(0, capture_window.destroy)
+
     def refresh_listbox(self):
         self.listbox.delete(0, tk.END)
         for action in self.actions:
@@ -281,6 +324,8 @@ class AutoClickerApp:
         try:
             self.time_delay = float(self.time_entry.get())
             if self.time_delay <= 0: raise ValueError("Time delay must be a positive number.")
+            self.loop_count = int(self.loop_entry.get())
+            if self.loop_count < 0: raise ValueError("Loop count cannot be negative.")
         except ValueError as e: messagebox.showerror("Error", str(e)); return
         if not self.running:
             self.running = True; self.log("Automation started.")
@@ -292,32 +337,48 @@ class AutoClickerApp:
             self.log("Automation stopped.")
 
     def run_automation_loop(self):
+        loops_completed = 0
         while self.running:
             for i, action in enumerate(self.actions):
                 if not self.running: break
-
-                # Schedule UI update on the main thread
                 def highlight_item(index):
                     self.listbox.selection_clear(0, tk.END)
                     self.listbox.selection_set(index)
                     self.listbox.see(index)
                 self.root.after(0, highlight_item, i)
-
                 if 'color' in action and action['color']:
                     if pyautogui.pixel(action['x'], action['y']) != action['color']:
-                        self.log(f"Skipping action at ({action['x']}, {action['y']}) due to color mismatch.")
-                        time.sleep(self.time_delay); continue
-
+                        self.log(f"Color mismatch at ({action['x']}, {action['y']}).")
+                        if self.stop_on_fail.get():
+                            self.log("Stopping automation due to 'Stop on Fail' being enabled.")
+                            self.running = False
+                            break
+                        else:
+                            self.log("Skipping action due to color mismatch.")
+                            time.sleep(self.time_delay)
+                            continue
                 action_type = action['type']
                 self.log(f"Executing: {action_type} - {action}")
                 if action_type == "Left Click": pyautogui.click(x=action['x'], y=action['y'], button='left')
                 elif action_type == "Right Click": pyautogui.click(x=action['x'], y=action['y'], button='right')
                 elif action_type == "Double Click": pyautogui.doubleClick(x=action['x'], y=action['y'])
                 elif action_type == "Scroll": pyautogui.scroll(action['amount'], x=action['x'], y=action['y'])
-                elif action_type == "Key Press": pyautogui.press(action['key'])
+                elif action_type == "Key Press":
+                    keys = action['key'].split('+')
+                    pyautogui.hotkey(*keys)
                 time.sleep(self.time_delay)
+            
+            if not self.running: break
 
-            if self.running: time.sleep(0.1) # Pause between sequence repeats
+            if self.loop_count > 0:
+                loops_completed += 1
+                self.log(f"Loop {loops_completed}/{self.loop_count} completed.")
+                if loops_completed >= self.loop_count:
+                    self.running = False
+            else:
+                self.log("Loop completed, starting next iteration.")
+
+            if self.running: time.sleep(0.1)
 
         self.log("Automation sequence finished.")
         self.root.after(0, self.listbox.selection_clear, 0, tk.END)
@@ -361,6 +422,31 @@ class AutoClickerApp:
             with open(filepath, 'w') as f: f.write(self.log_area.get(1.0, tk.END))
             self.log(f"Log saved to {filepath}")
         except Exception as e: messagebox.showerror("Error", f"Failed to save log: {e}")
+
+    def _setup_log_auto_management(self):
+        """Initiates the periodic log clearing and saving task."""
+        self.log_file_path = "autoclicker_log.txt"
+        with open(self.log_file_path, 'w') as f:
+            f.write(f"Log session started at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+        self.root.after(30000, self._log_maintenance_task)
+
+    def _log_maintenance_task(self):
+        """Periodically saves the log to a file and clears the log area."""
+        log_content = self.log_area.get(1.0, tk.END).strip()
+        if log_content:
+            try:
+                with open(self.log_file_path, 'a') as f:
+                    f.write(log_content + "\n\n")
+                
+                self.log_area.config(state='normal')
+                self.log_area.delete(1.0, tk.END)
+                self.log_area.config(state='disabled')
+                
+                self.log("Log auto-saved and cleared.")
+            except Exception as e:
+                print(f"Error during log maintenance: {e}")
+        
+        self.root.after(30000, self._log_maintenance_task)
 
 
 if __name__ == "__main__":
