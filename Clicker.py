@@ -218,6 +218,12 @@ class AutoClickerApp:
         self.log_area.config(state='normal')
         self.log_area.insert(tk.END, message)
         self.log_area.see(tk.END)
+
+        # Trim the log if it exceeds a certain number of lines
+        num_lines = int(self.log_area.index('end-1c').split('.')[0])
+        if num_lines > 1000:
+            self.log_area.delete('1.0', '501.0')
+
         self.log_area.config(state='disabled')
 
     def update_mouse_position(self):
