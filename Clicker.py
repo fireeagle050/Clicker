@@ -48,7 +48,6 @@ class AutoClickerApp:
         self.apply_theme("Dark")
         self.update_mouse_position()
         self.setup_global_shortcuts()
-        self._setup_log_auto_management()
         self.log("Application initialized. Press Ctrl+S to start/stop, Ctrl+P to pick coordinates.")
 
     def setup_ui(self):
@@ -219,6 +218,12 @@ class AutoClickerApp:
         self.log_area.config(state='normal')
         self.log_area.insert(tk.END, message)
         self.log_area.see(tk.END)
+
+        # Trim the log if it exceeds a certain number of lines
+        num_lines = int(self.log_area.index('end-1c').split('.')[0])
+        if num_lines > 1000:
+            self.log_area.delete('1.0', '501.0')
+
         self.log_area.config(state='disabled')
 
     def update_mouse_position(self):
@@ -422,31 +427,6 @@ class AutoClickerApp:
             with open(filepath, 'w') as f: f.write(self.log_area.get(1.0, tk.END))
             self.log(f"Log saved to {filepath}")
         except Exception as e: messagebox.showerror("Error", f"Failed to save log: {e}")
-
-    def _setup_log_auto_management(self):
-        """Initiates the periodic log clearing and saving task."""
-        self.log_file_path = "autoclicker_log.txt"
-        with open(self.log_file_path, 'w') as f:
-            f.write(f"Log session started at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
-        self.root.after(30000, self._log_maintenance_task)
-
-    def _log_maintenance_task(self):
-        """Periodically saves the log to a file and clears the log area."""
-        log_content = self.log_area.get(1.0, tk.END).strip()
-        if log_content:
-            try:
-                with open(self.log_file_path, 'a') as f:
-                    f.write(log_content + "\n\n")
-                
-                self.log_area.config(state='normal')
-                self.log_area.delete(1.0, tk.END)
-                self.log_area.config(state='disabled')
-                
-                self.log("Log auto-saved and cleared.")
-            except Exception as e:
-                print(f"Error during log maintenance: {e}")
-        
-        self.root.after(30000, self._log_maintenance_task)
 
 
 if __name__ == "__main__":
